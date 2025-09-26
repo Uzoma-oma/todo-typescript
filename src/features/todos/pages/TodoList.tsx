@@ -12,16 +12,30 @@ import {
 
 const BASE = "https://dummyjson.com/todos";
 
+// Type definitions
+interface Todo {
+  id: number;
+  todo: string;
+  completed: boolean;
+  userId: number;
+}
+
+interface NewTodo {
+  todo: string;
+  completed: boolean;
+  userId: number;
+}
+
 export default function TodoList() {
-  const [page, setPage] = useState(1);
-  const [newTitle, setNewTitle] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [editingTodo, setEditingTodo] = useState(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [deleteTodoId, setDeleteTodoId] = useState(null);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [page, setPage] = useState<number>(1);
+  const [newTitle, setNewTitle] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
+  const [editTitle, setEditTitle] = useState<string>("");
+  const [isEditOpen, setIsEditOpen] = useState<boolean>(false);
+  const [deleteTodoId, setDeleteTodoId] = useState<number | null>(null);
+  const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
 
   const todosPerPage = 10;
   const queryClient = useQueryClient();
@@ -30,9 +44,9 @@ export default function TodoList() {
     data: todosData = [],
     isLoading,
     isError,
-  } = useQuery({
+  } = useQuery<Todo[]>({
     queryKey: ["todos"],
-    queryFn: async () => {
+    queryFn: async (): Promise<Todo[]> => {
       const cached = localStorage.getItem("todos");
       if (cached) return JSON.parse(cached);
 
@@ -44,7 +58,7 @@ export default function TodoList() {
   });
 
   const createTodo = useMutation({
-    mutationFn: async (newTodo) => {
+    mutationFn: async (newTodo: NewTodo): Promise<Todo> => {
       const res = await fetch(`${BASE}/add`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -53,14 +67,14 @@ export default function TodoList() {
       if (!res.ok) throw new Error("Failed to add todo");
       return res.json();
     },
-    onSuccess: (added) => {
-      queryClient.setQueryData(["todos"], (old = []) => [added, ...old]);
+    onSuccess: (added: Todo) => {
+      queryClient.setQueryData(["todos"], (old: Todo[] = []) => [added, ...old]);
       setNewTitle("");
     },
   });
 
   const updateTodo = useMutation({
-    mutationFn: async (todo) => {
+    mutationFn: async (todo: Todo): Promise<Todo> => {
       const res = await fetch(`${BASE}/${todo.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -69,8 +83,8 @@ export default function TodoList() {
       if (!res.ok) throw new Error("Failed to update todo");
       return res.json();
     },
-    onSuccess: (updated) => {
-      queryClient.setQueryData(["todos"], (old = []) =>
+    onSuccess: (updated: Todo) => {
+      queryClient.setQueryData(["todos"], (old: Todo[] = []) =>
         old.map((t) => (t.id === updated.id ? updated : t))
       );
       setIsEditOpen(false);
@@ -79,13 +93,13 @@ export default function TodoList() {
   });
 
   const deleteTodo = useMutation({
-    mutationFn: async (id) => {
+    mutationFn: async (id: number): Promise<number> => {
       const res = await fetch(`${BASE}/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete");
       return id;
     },
-    onSuccess: (id) => {
-      queryClient.setQueryData(["todos"], (old = []) =>
+    onSuccess: (id: number) => {
+      queryClient.setQueryData(["todos"], (old: Todo[] = []) =>
         old.filter((t) => t.id !== id)
       );
       setIsDeleteOpen(false);
@@ -94,7 +108,7 @@ export default function TodoList() {
   });
 
   const toggleCompleted = useMutation({
-    mutationFn: async (todo) => {
+    mutationFn: async (todo: Todo): Promise<Todo> => {
       const res = await fetch(`${BASE}/${todo.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -103,24 +117,25 @@ export default function TodoList() {
       if (!res.ok) throw new Error("Failed to toggle completion");
       return res.json();
     },
-    onSuccess: (updated) => {
-      queryClient.setQueryData(["todos"], (old = []) =>
+    onSuccess: (updated: Todo) => {
+      queryClient.setQueryData(["todos"], (old: Todo[] = []) =>
         old.map((t) => (t.id === updated.id ? updated : t))
       );
     },
   });
 
-  const handleEdit = (todo) => {
+  const handleEdit = (todo: Todo): void => {
     setEditingTodo(todo);
     setEditTitle(todo.todo);
     setIsEditOpen(true);
   };
-  const handleDelete = (todo) => {
+
+  const handleDelete = (todo: Todo): void => {
     setDeleteTodoId(todo.id);
     setIsDeleteOpen(true);
   };
 
-  const filtered = todosData.filter((todo) => {
+  const filtered = todosData.filter((todo: Todo) => {
     const matchesSearch = todo.todo
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
@@ -188,6 +203,8 @@ export default function TodoList() {
           />
           <Button
             type="submit"
+            variant="default"
+            size="default"
             className="bg-pink-800 text-white px-4 py-2 rounded-md hover:bg-pink-900 focus:outline-none focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
           >
             Add
@@ -204,7 +221,7 @@ export default function TodoList() {
         ) : (
           <>
             <ul className="space-y-2 max-w-2xl mx-auto px-2">
-              {paginated.map((todo) => (
+              {paginated.map((todo: Todo) => (
                 <li
                   key={todo.id}
                   className="bg-pink-100 border border-pink-300 rounded-lg p-3 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 overflow-x-auto"
@@ -275,6 +292,7 @@ export default function TodoList() {
                   key={i + 1}
                   aria-current={page === i + 1 ? "page" : undefined}
                   size="sm"
+                  variant={page === i + 1 ? "default" : "outline"}
                   className={`${
                     page === i + 1
                       ? "bg-pink-800 text-white"
@@ -310,7 +328,9 @@ export default function TodoList() {
             className="space-y-4 mt-4 w-full max-w-full"
             onSubmit={(e) => {
               e.preventDefault();
-              updateTodo.mutate({ ...editingTodo, todo: editTitle });
+              if (editingTodo) {
+                updateTodo.mutate({ ...editingTodo, todo: editTitle });
+              }
             }}
           >
             <input
@@ -324,6 +344,7 @@ export default function TodoList() {
               <DialogClose asChild>
                 <Button
                   variant="outline"
+                  size="default"
                   className="text-pink-950 w-full sm:w-auto"
                 >
                   Cancel
@@ -331,6 +352,8 @@ export default function TodoList() {
               </DialogClose>
               <Button
                 type="submit"
+                variant="default"
+                size="default"
                 className="bg-pink-600 text-white hover:bg-pink-700 w-full sm:w-auto"
               >
                 Update
@@ -353,13 +376,20 @@ export default function TodoList() {
             <DialogClose asChild>
               <Button
                 variant="outline"
+                size="default"
                 className="text-pink-950 w-full sm:w-auto"
               >
                 Cancel
               </Button>
             </DialogClose>
             <Button
-              onClick={() => deleteTodo.mutate(deleteTodoId)}
+              onClick={() => {
+                if (deleteTodoId) {
+                  deleteTodo.mutate(deleteTodoId);
+                }
+              }}
+              variant="default"
+              size="default"
               className="bg-pink-800 text-white hover:bg-pink-900 w-full sm:w-auto"
             >
               Delete

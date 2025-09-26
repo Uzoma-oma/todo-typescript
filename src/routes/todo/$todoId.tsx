@@ -1,13 +1,19 @@
 import { useParams, useNavigate } from "@tanstack/react-router";
 
+interface Todo {
+  id: number;
+  todo: string;
+  completed: boolean;
+  userId: number;
+}
+
 export default function TodoDetails() {
-  const { todoId } = useParams();
+  const { todoId } = useParams({ strict: false });
   const navigate = useNavigate();
 
   // Fetch data using `todoId` (dummy example):
-  const todo = JSON.parse(localStorage.getItem("todos") || "[]").find(
-    (t) => t.id.toString() === todoId
-  );
+  const todos: Todo[] = JSON.parse(localStorage.getItem("todos") || "[]");
+  const todo = todos.find((t: Todo) => t.id.toString() === todoId);
 
   if (!todo) return <p>Todo not found</p>;
 

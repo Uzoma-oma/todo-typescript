@@ -10,7 +10,9 @@ export default function NotFound() {
         The page you're looking for doesn't exist or has been moved.
       </p>
       <Link to="/">
-        <Button className="text-sm sm:text-base">Go back home</Button>
+        <Button variant="default" size="default" className="text-sm sm:text-base">
+          Go back home
+        </Button>
       </Link>
     </div>
   );

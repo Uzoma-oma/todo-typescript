@@ -1,12 +1,19 @@
 import { useParams, useNavigate } from "@tanstack/react-router";
 
+// Type definition for Todo
+interface Todo {
+  id: number;
+  todo: string;
+  completed: boolean;
+  userId: number;
+}
+
 export default function TodoDetails() {
-  const { todoId } = useParams();
+  const { todoId } = useParams({ strict: false });
   const navigate = useNavigate();
 
-  const todo = JSON.parse(localStorage.getItem("todos") || "[]").find(
-    (t) => t.id.toString() === todoId
-  );
+  const todos: Todo[] = JSON.parse(localStorage.getItem("todos") || "[]");
+  const todo = todos.find((t: Todo) => t.id.toString() === todoId);
 
   if (!todo) return <p className="text-center text-red-500">Todo not found</p>;
 
